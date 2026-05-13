@@ -18,7 +18,7 @@ if (!global.mongoose) {
 async function connectDB() {
   if (!MONGODB_URI) {
     throw new Error(
-      "please define the MONGODB_URI enviroment variable inside .env",
+      "Please define the MONGODB_URI environment variable inside .env.local",
     );
   }
   if (cached.conn) {

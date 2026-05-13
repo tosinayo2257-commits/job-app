@@ -1,3 +1,4 @@
+"use client";
 import { Briefcase } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -12,10 +13,9 @@ import {
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { signOut, useSession } from "@/lib/auth/auth-client";
 import SignOutButton from "./ui/sign-out-btn";
-import { getSession } from "@/lib/auth/auth";
 
-export default async function Navbar() {
-  const session = getSession;
+export default function Navbar() {
+  const { data: session } = useSession();
 
   return (
     <nav className="border-b border-gray-200 bg-white">
@@ -32,16 +32,11 @@ export default async function Navbar() {
           {session?.user ? (
             <>
               <Link href="/dashboard">
-                <Button
-                  variant="ghost"
-                  className="text-gray-700 hover:text-black"
-                >
-                  Dashboard
-                </Button>
+                <Button variant="ghost">Dashboard</Button>
               </Link>
 
               <DropdownMenu>
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost">
                     <Avatar>
                       <AvatarFallback className="bg-[#f76382]">
@@ -53,14 +48,11 @@ export default async function Navbar() {
 
                 <DropdownMenuContent>
                   <DropdownMenuLabel>
-                    <div>
-                      <p>{session.user.name}</p>
-                      <p>{session.user.email}</p>
-                    </div>
+                    <p>{session.user.name}</p>
+                    <p>{session.user.email}</p>
                   </DropdownMenuLabel>
-                  <SignOutButton />
 
-                  <DropdownMenuItem onClick={async () => signOut()}>
+                  <DropdownMenuItem onClick={() => signOut()}>
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -69,18 +61,11 @@ export default async function Navbar() {
           ) : (
             <>
               <Link href="/sign-in">
-                <Button
-                  variant="ghost"
-                  className="text-gray-700 hover:text-black"
-                >
-                  Log In
-                </Button>
+                <Button variant="ghost">Log In</Button>
               </Link>
 
               <Link href="/sign-up">
-                <Button className="text-gray-700 hover:text-black">
-                  Start for Free
-                </Button>
+                <Button>Start for Free</Button>
               </Link>
             </>
           )}
