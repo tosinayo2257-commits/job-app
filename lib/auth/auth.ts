@@ -1,4 +1,3 @@
-import "server-only";
 import { headers } from "next/headers";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
