@@ -3,32 +3,19 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IBoard extends Document {
   name: string;
   userId: string;
-  columns: mongoose.Types.ObjectId;
+  columns: mongoose.Types.ObjectId[]; // array, not single
   createdAt: Date;
-  updateAt: Date;
+  updatedAt: Date; // correct spelling
 }
 
 const BoardSchema = new Schema<IBoard>(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    userId: {
-      type: String,
-      reguired: true,
-      index: true,
-    },
-    columns: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Column",
-      },
-    ],
+    name: { type: String, required: true },
+    userId: { type: String, required: true, index: true }, // fixed typo
+    columns: [{ type: Schema.Types.ObjectId, ref: "Column" }],
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
+
 export default mongoose.models.Board ||
   mongoose.model<IBoard>("Board", BoardSchema);

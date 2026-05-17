@@ -4,38 +4,39 @@ export interface IColumn extends Document {
   name: string;
   boardId: Schema.Types.ObjectId;
   order: number;
-  jobApplication: mongoose.Types.ObjectId;
+  jobApplications: mongoose.Types.ObjectId[]; // pluralized correctly
   createdAt: Date;
-  updateAt: Date;
+  updatedAt: Date;
 }
 
 const ColumnSchema = new Schema<IColumn>(
   {
-    name: {
-      type: String,
-      required: true,
-    },
+    name: { type: String, required: true },
+
     boardId: {
       type: Schema.Types.ObjectId,
       ref: "Board",
-      reguired: true,
+      required: true,
       index: true,
     },
+
     order: {
       type: Number,
-      required: true,
       default: 0,
     },
-    jobApplication: [
+
+    jobApplications: [
       {
         type: Schema.Types.ObjectId,
         ref: "JobApplication",
       },
     ],
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
-export default mongoose.models.Column ||
-  mongoose.model<IColumn>("Column", ColumnSchema);
+
+// Prevent model overwrite issues in Next.js (hot reload)
+const Column =
+  mongoose.models.Column || mongoose.model<IColumn>("Column", ColumnSchema);
+
+export default Column;
