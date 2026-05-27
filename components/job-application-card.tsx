@@ -21,14 +21,13 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { updateJobApplication } from "@/lib/actions/job-application";
 
 type DragHandleProps = React.HTMLAttributes<HTMLDivElement>;
 
 interface JobApplicationCardProps {
-  job?: JobApplication;
+  job: JobApplication; // ✅ FIXED (no longer optional)
   columns: Column[];
   dragHandleProps?: DragHandleProps;
 }
@@ -41,9 +40,8 @@ export default function JobApplicationCard({
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  if (!job) return null;
-
-  const [formData, setFormData] = useState({
+  // ✅ SAFE INITIAL STATE (no hook rule violation)
+  const [formData, setFormData] = useState(() => ({
     company: job.company || "",
     position: job.position || "",
     location: job.location || "",
@@ -52,7 +50,7 @@ export default function JobApplicationCard({
     jobUrl: job.jobUrl || "",
     tags: Array.isArray(job.tags) ? job.tags.join(", ") : "",
     description: job.description || "",
-  });
+  }));
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -158,11 +156,8 @@ export default function JobApplicationCard({
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Edit2 className="h-4 w-4" />
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Edit2 className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
 
@@ -180,9 +175,9 @@ export default function JobApplicationCard({
                 <DropdownMenuItem
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="flex items-center gap-2 text-red-500"
+                  className="text-red-500"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 mr-2" />
                   {isPending ? "Deleting..." : "Delete"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -202,25 +197,23 @@ export default function JobApplicationCard({
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                required
-                value={formData.company}
-                onChange={(e) =>
-                  setFormData({ ...formData, company: e.target.value })
-                }
-                placeholder="Company"
-              />
+            <Input
+              required
+              value={formData.company}
+              onChange={(e) =>
+                setFormData({ ...formData, company: e.target.value })
+              }
+              placeholder="Company"
+            />
 
-              <Input
-                required
-                value={formData.position}
-                onChange={(e) =>
-                  setFormData({ ...formData, position: e.target.value })
-                }
-                placeholder="Position"
-              />
-            </div>
+            <Input
+              required
+              value={formData.position}
+              onChange={(e) =>
+                setFormData({ ...formData, position: e.target.value })
+              }
+              placeholder="Position"
+            />
 
             <Input
               value={formData.location}
