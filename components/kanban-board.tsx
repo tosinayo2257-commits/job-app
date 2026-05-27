@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import { Board, Column, JobApplication } from "@/lib/models/models-types";
 
@@ -23,6 +23,7 @@ import {
   useDroppable,
   useSensor,
   useSensors,
+  useDndContext,
 } from "@dnd-kit/core";
 
 import {
@@ -81,9 +82,7 @@ function SortableJobCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id: String(job._id),
-  });
+  } = useSortable({ id: String(job._id) });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -120,8 +119,9 @@ function DroppableColumn({
     id: String(column._id),
   });
 
-  const sortedJobs = [...(column.jobApplications || [])].sort(
-    (a, b) => a.order - b.order,
+  const sortedJobs = useMemo(
+    () => [...(column.jobApplications || [])].sort((a, b) => a.order - b.order),
+    [column.jobApplications],
   );
 
   return (
@@ -130,7 +130,6 @@ function DroppableColumn({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {config.icon}
-
             <CardTitle>{column.name}</CardTitle>
           </div>
 
@@ -153,9 +152,7 @@ function DroppableColumn({
 
       <CardContent
         ref={setNodeRef}
-        className={`min-h-[400px] space-y-3 p-4 ${
-          isOver ? "ring-2 ring-blue-500" : ""
-        }`}
+        className={`min-h-[400px] space-y-3 p-4 ${isOver ? "ring-2 ring-blue-500" : ""}`}
       >
         <SortableContext
           items={sortedJobs.map((job) => String(job._id))}
@@ -182,15 +179,18 @@ function DroppableColumn({
 export default function KanbanBoard({ board }: KanbanBoardProps) {
   const { columns, moveJob } = useBoard(board);
 
-  const sortedColumns = [...(columns || [])].sort((a, b) => a.order - b.order);
+  const sortedColumns = useMemo(
+    () => [...(columns || [])].sort((a, b) => a.order - b.order),
+    [columns],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint: { distance: 8 },
     }),
   );
+
+  const { active } = useDndContext();
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -210,9 +210,7 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
 
       if (targetColumn) {
         destinationColumnId = String(targetColumn._id);
-      }
-
-      if (!destinationColumnId) {
+      } else {
         for (const column of columns) {
           const hasJob = column.jobApplications?.some(
             (job) => String(job._id) === String(over.id),
@@ -225,10 +223,7 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
         }
       }
 
-      if (!destinationColumnId) {
-        console.error("Destination column not found");
-        return;
-      }
+      if (!destinationColumnId) return;
 
       try {
         await moveJob(activeJobId, destinationColumnId);
@@ -238,9 +233,15 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
     },
     [columns, moveJob],
   );
-  const activeJob = sortedColumns
-    .flatMap((col) => col.jobApplications || [])
-    .find((job) => job._id === active.id);
+
+  const activeJob = useMemo(() => {
+    if (!active?.id) return null;
+
+    return sortedColumns
+      .flatMap((col) => col.jobApplications || [])
+      .find((job) => String(job._id) === String(active.id));
+  }, [active, sortedColumns]);
+
   return (
     <DndContext
       sensors={sensors}
