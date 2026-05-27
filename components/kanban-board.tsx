@@ -20,6 +20,7 @@ import {
   DragOverlay,
   PointerSensor,
   closestCorners,
+  useDndContext,
   useDroppable,
   useSensor,
   useSensors,
@@ -94,10 +95,7 @@ function SortableJobCard({
       <JobApplicationCard
         job={job}
         columns={columns}
-        dragHandleProps={{
-          ...attributes,
-          ...listeners,
-        }}
+        dragHandleProps={{ ...attributes, ...listeners }}
       />
     </div>
   );
@@ -151,7 +149,9 @@ function DroppableColumn({
 
       <CardContent
         ref={setNodeRef}
-        className={`min-h-[400px] space-y-3 p-4 ${isOver ? "ring-2 ring-blue-500" : ""}`}
+        className={`min-h-[400px] space-y-3 p-4 ${
+          isOver ? "ring-2 ring-blue-500" : ""
+        }`}
       >
         <SortableContext
           items={sortedJobs.map((job) => String(job._id))}
@@ -199,8 +199,22 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
 
       if (active.id === over.id) return;
 
+      let sourceColumnId: string | null = null;
       let destinationColumnId: string | null = null;
 
+      // ✅ FIND SOURCE COLUMN
+      for (const column of columns) {
+        const hasJob = column.jobApplications?.some(
+          (job) => String(job._id) === String(active.id),
+        );
+
+        if (hasJob) {
+          sourceColumnId = String(column._id);
+          break;
+        }
+      }
+
+      // ✅ FIND DESTINATION COLUMN
       const targetColumn = columns.find(
         (column) => String(column._id) === String(over.id),
       );
@@ -220,10 +234,10 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
         }
       }
 
-      if (!destinationColumnId) return;
+      if (!sourceColumnId || !destinationColumnId) return;
 
       try {
-        await moveJob(activeJobId, destinationColumnId);
+        await moveJob(activeJobId, sourceColumnId, destinationColumnId);
       } catch (error) {
         console.error("Move job failed:", error);
       }
@@ -231,11 +245,15 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
     [columns, moveJob],
   );
 
+  const { active } = useDndContext();
+
   const activeJob = useMemo(() => {
+    if (!active?.id) return null;
+
     return sortedColumns
       .flatMap((col) => col.jobApplications || [])
-      .find((job) => String(job._id) === String(useBoard));
-  }, [sortedColumns]);
+      .find((job) => String(job._id) === String(active.id));
+  }, [active, sortedColumns]);
 
   return (
     <DndContext
