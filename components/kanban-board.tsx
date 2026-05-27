@@ -23,7 +23,6 @@ import {
   useDroppable,
   useSensor,
   useSensors,
-  useDndContext,
 } from "@dnd-kit/core";
 
 import {
@@ -190,8 +189,6 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
     }),
   );
 
-  const { active } = useDndContext();
-
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
@@ -235,12 +232,10 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
   );
 
   const activeJob = useMemo(() => {
-    if (!active?.id) return null;
-
     return sortedColumns
       .flatMap((col) => col.jobApplications || [])
-      .find((job) => String(job._id) === String(active.id));
-  }, [active, sortedColumns]);
+      .find((job) => String(job._id) === String(useBoard));
+  }, [sortedColumns]);
 
   return (
     <DndContext
