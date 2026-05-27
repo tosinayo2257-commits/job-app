@@ -14,71 +14,64 @@ export function useBoard(initialBoard?: Board | null) {
     }
   }, [initialBoard]);
 
+  /**
+   * Move job between columns (drag & drop)
+   */
   async function moveJob(
     jobApplicationId: string,
-    newColumnId: string,
-    newOrder: number,
+    sourceColumnId: string,
+    destinationColumnId: string,
   ) {
+    // ✅ Optimistic UI update
     setColumns((prev) => {
       const newColumns = prev.map((col) => ({
         ...col,
-        jobApplications: [...col.jobApplications],
+        jobApplications: [...(col.jobApplications || [])],
       }));
 
-      let jobToMove: JobApplication | null = null;
-      let oldColumnId: string | null = null;
+      let movedJob: JobApplication | null = null;
 
-      for (const column of newColumns) {
-        const jobIndex = column.jobApplications.findIndex(
-          (j) => j._id === jobApplicationId,
+      // 1. Remove job from source column
+      const sourceColumn = newColumns.find(
+        (col) => String(col._id) === String(sourceColumnId),
+      );
+
+      if (sourceColumn) {
+        const index = sourceColumn.jobApplications.findIndex(
+          (job) => String(job._id) === String(jobApplicationId),
         );
-        if (jobIndex !== -1 && jobIndex !== undefined) {
-          jobToMove = column.jobApplications[jobIndex];
-          oldColumnId = column._id;
-          column.jobApplications = column.jobApplications.filter(
-            (j) => j._id !== jobApplicationId,
-          );
-          break;
+
+        if (index !== -1) {
+          movedJob = sourceColumn.jobApplications[index];
+          sourceColumn.jobApplications.splice(index, 1);
         }
       }
-      if (jobToMove && oldColumnId) {
-        const targetColumnIndex = newColumns.findIndex(
-          (col) => col._id === newColumnId,
-        );
-        if (targetColumnIndex !== -1) {
-          const targetColumn = newColumns[targetColumnIndex];
-          const currentJobs = targetColumn.jobApplications || [];
 
-          const updatedJobs = [...currentJobs];
-          updatedJobs.splice(newOrder, 0, {
-            ...jobToMove,
-            columnId: newColumnId,
-            order: newOrder * 100,
-          });
+      // 2. Add job to destination column
+      const destColumn = newColumns.find(
+        (col) => String(col._id) === String(destinationColumnId),
+      );
 
-          const jobsWithUpdatedOrder = updatedJobs.map((job, idx) => ({
-            ...job,
-            order: idx * 100,
-          }));
-
-          newColumns[targetColumnIndex] = {
-            ...targetColumn,
-            jobApplications: jobsWithUpdatedOrder,
-          };
-        }
+      if (destColumn && movedJob) {
+        destColumn.jobApplications.push({
+          ...movedJob,
+          columnId: destinationColumnId,
+        });
       }
 
       return newColumns;
     });
 
+    // ✅ Backend sync
     try {
-      const result = await updateJobApplication(jobApplicationId, {
-        columnId: newColumnId,
-        order: newOrder,
+      await updateJobApplication(jobApplicationId, {
+        columnId: destinationColumnId,
       });
     } catch (err) {
-      console.error("Error", err);
+      console.error("Error moving job:", err);
+      setError("Failed to move job application");
     }
   }
+
   return { board, columns, error, moveJob };
 }
