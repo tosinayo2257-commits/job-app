@@ -43,7 +43,7 @@ export default function ImageTabs() {
             )}
             {activeTab === "hired" && (
               <Image
-                src="/hero2.png"
+                src="/hero2.jpg"
                 alt="Organize Applications"
                 width={900}
                 height={300}

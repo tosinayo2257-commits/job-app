@@ -261,7 +261,7 @@ export default function KanbanBoard({ board }: KanbanBoardProps) {
       collisionDetection={closestCorners}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-4">
+      <div>
         <div className="flex gap-4 overflow-x-auto p-4">
           {sortedColumns.map((column, index) => {
             const config = COLUMN_CONFIG[index] || {
