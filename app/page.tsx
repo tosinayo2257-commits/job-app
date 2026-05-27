@@ -4,7 +4,6 @@ import { ArrowRight, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import ImageTabs from "@/components/image-tabs";
-import JobApplicationCard from "@/components/job-application-card";
 
 export default function Home() {
   return (
@@ -78,7 +77,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <JobApplicationCard />
       </main>
     </div>
   );

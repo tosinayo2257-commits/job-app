@@ -12,13 +12,12 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { signOut, useSession } from "@/lib/auth/auth-client";
-import SignOutButton from "./ui/sign-out-btn";
 
 export default function Navbar() {
   const { data: session } = useSession();
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="border-b sticky top-0 border-gray-200 bg-white">
       <div className="container mx-auto flex h-15 items-center justify-between px-4">
         <Link
           href="/"
